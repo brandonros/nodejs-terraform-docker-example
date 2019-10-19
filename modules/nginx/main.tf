@@ -18,6 +18,11 @@ resource "docker_container" "nginx" {
     container_path = "/etc/nginx/nginx.conf"
   }
 
+  volumes {
+    host_path = abspath("./html")
+    container_path = "/usr/share/nginx/html"
+  }
+
   ports {
     internal = "${var.nginx_port}"
     external = "${var.nginx_port}"
