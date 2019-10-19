@@ -31,7 +31,7 @@ resource "docker_container" "db" {
   ]
 
   volumes {
-    host_path = "${var.volumes_path}/postgres"
+    host_path = abspath("${var.volumes_path}/postgres")
     container_path = "/var/lib/postgresql/data"
   }
 
@@ -55,7 +55,7 @@ resource "docker_container" "redis" {
   restart = "always"
 
   volumes {
-    host_path = "${var.volumes_path}/redis"
+    host_path = abspath("${var.volumes_path}/redis")
     container_path = "/data"
   }
 

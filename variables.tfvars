@@ -1,5 +1,5 @@
 # volumes path
-volumes_path = "/Users/brandonros/Desktop/nodejs-terraform-docker-example/volumes"
+volumes_path = "./volumes"
 # postgres
 postgres_host = "db"
 postgres_user = "postgres"
