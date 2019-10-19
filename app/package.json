@@ -1,0 +1,16 @@
+{
+  "name": "app",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docker:cleanup": "docker image rm app:$npm_package_version",
+    "docker:build": "docker build . -t app:$npm_package_version"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^7.12.1",
+    "redis": "^2.8.0"
+  }
+}

@@ -1,0 +1,5 @@
+volumes/
+*.tfstate
+*.tfstate.backup
+.terraform/
+app/node_modules/
