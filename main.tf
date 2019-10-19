@@ -10,6 +10,7 @@ variable "postgres_database" {}
 variable "redis_host" {}
 variable "redis_port" {}
 variable "app_version" {}
+variable "app_port" {}
 
 # create docker network resource
 resource "docker_network" "private_network" {
@@ -83,8 +84,14 @@ resource "docker_container" "app" {
     "POSTGRES_PASSWORD=${var.postgres_password}",
     "POSTGRES_DB=${var.postgres_database}",
     "REDIS_HOST=${var.redis_host}",
-    "REDIS_PORT=${var.redis_port}"
+    "REDIS_PORT=${var.redis_port}",
+    "PORT=${var.app_port}",
   ]
+
+  ports {
+    internal = "${var.app_port}"
+    external = "${var.app_port}"
+  }
 
   networks_advanced {
     name = "${docker_network.private_network.name}"

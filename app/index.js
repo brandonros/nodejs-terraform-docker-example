@@ -1,5 +1,6 @@
 const { Client } = require('pg')
 const redis = require('redis')
+const express = require('express')
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -24,14 +25,23 @@ const initCache = async () => {
   return redisClient
 }
 
+const initApp = () => {
+  const app = express()
+  app.get('/ping', (req, res) => {
+    res.send('pong')
+  })
+  app.listen(process.env.PORT, () => console.log('Listening...'))
+  return app
+}
+
 const run = async () => {
   // wait for services to come up from docker network
   await delay(1000 * 30)
-  await Promise.all([
+  const [db, cache] = await Promise.all([
     initDb(),
     initCache()
   ])
-  console.log('Ready!')
+  const app = initApp()
 }
 
 run()
