@@ -3,3 +3,5 @@ volumes/
 *.tfstate.backup
 .terraform/
 app/node_modules/
+.DS_Store
+plan

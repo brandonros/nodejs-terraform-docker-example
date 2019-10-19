@@ -9,6 +9,10 @@ postgres_database = "app"
 # redis
 redis_host = "redis"
 redis_port = "6379"
+# nginx
+nginx_host = "nginx"
+nginx_port = "80"
 # app
 app_version = "0.0.1"
-app_port = "3000"
+app_001_port = "3000"
+app_002_port = "3001"

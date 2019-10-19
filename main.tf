@@ -1,100 +1,79 @@
 provider "docker" {}
 
-# declare any input variables
+# volumes
 variable "volumes_path" {}
+# postgres
 variable "postgres_host" {}
 variable "postgres_user" {}
 variable "postgres_password" {}
-variable "postgres_port" {}
 variable "postgres_database" {}
+variable "postgres_port" {}
+# redis
 variable "redis_host" {}
 variable "redis_port" {}
+# app
+variable "app_001_port" {}
+variable "app_002_port" {}
 variable "app_version" {}
-variable "app_port" {}
+# nginx
+variable "nginx_host" {}
+variable "nginx_port" {}
 
-# create docker network resource
 resource "docker_network" "private_network" {
   name = "my_network"
 }
 
-# create db container
-resource "docker_container" "db" {
-  name  = "db"
-  hostname = "${var.postgres_host}"
-  image = "postgres:alpine"
-  restart = "always"
-
-  env = [
-    "POSTGRES_USER=${var.postgres_user}",
-    "POSTGRES_PASSWORD=${var.postgres_password}",
-    "POSTGRES_DB=${var.postgres_database}"
-  ]
-
-  volumes {
-    host_path = abspath("${var.volumes_path}/postgres")
-    container_path = "/var/lib/postgresql/data"
-  }
-
-  ports {
-    internal = "${var.postgres_port}"
-    external = "${var.postgres_port}"
-  }
-
-  networks_advanced {
-    name = "${docker_network.private_network.name}"
-    aliases = ["db"]
-  }
+module "postgres" {
+  source = "./modules/postgres"
+  volumes_path = "${var.volumes_path}"
+  postgres_host = "${var.postgres_host}"
+  postgres_user = "${var.postgres_user}"
+  postgres_password = "${var.postgres_password}"
+  postgres_database = "${var.postgres_database}"
+  postgres_port = "${var.postgres_port}"
+  network_name = "${docker_network.private_network.name}"
 }
 
-# create redis container
-resource "docker_container" "redis" {
-  name  = "redis"
-  hostname = "${var.redis_host}"
-  image = "redis:alpine"
-  command = ["redis-server", "--appendonly", "yes"]
-  restart = "always"
-
-  volumes {
-    host_path = abspath("${var.volumes_path}/redis")
-    container_path = "/data"
-  }
-
-  ports {
-    internal = "${var.redis_port}"
-    external = "${var.redis_port}"
-  }
-
-  networks_advanced {
-    name = "${docker_network.private_network.name}"
-    aliases = ["redis"]
-  }
+module "redis" {
+  source = "./modules/redis"
+  volumes_path = "${var.volumes_path}"
+  redis_host = "${var.redis_host}"
+  redis_port = "${var.redis_port}"
+  network_name = "${docker_network.private_network.name}"
 }
 
-# create app container
-resource "docker_container" "app" {
-  name  = "app"
-  hostname = "app"
-  image = "app:${var.app_version}"
-  restart = "always"
+module "app-001" {
+  source = "./modules/app-001"
+  postgres_host = "${var.postgres_host}"
+  postgres_user = "${var.postgres_user}"
+  postgres_password = "${var.postgres_password}"
+  postgres_database = "${var.postgres_database}"
+  postgres_port = "${var.postgres_port}"
+  redis_host = "${var.redis_host}"
+  redis_port = "${var.redis_port}"
+  app_port = "${var.app_001_port}"
+  app_version = "${var.app_version}"
+  network_name = "${docker_network.private_network.name}"
+}
 
-  env = [
-    "POSTGRES_HOST=${var.postgres_host}",
-    "POSTGRES_PORT=${var.postgres_port}",
-    "POSTGRES_USER=${var.postgres_user}",
-    "POSTGRES_PASSWORD=${var.postgres_password}",
-    "POSTGRES_DB=${var.postgres_database}",
-    "REDIS_HOST=${var.redis_host}",
-    "REDIS_PORT=${var.redis_port}",
-    "PORT=${var.app_port}",
-  ]
+module "app-002" {
+  source = "./modules/app-002"
+  postgres_host = "${var.postgres_host}"
+  postgres_user = "${var.postgres_user}"
+  postgres_password = "${var.postgres_password}"
+  postgres_database = "${var.postgres_database}"
+  postgres_port = "${var.postgres_port}"
+  redis_host = "${var.redis_host}"
+  redis_port = "${var.redis_port}"
+  app_port = "${var.app_002_port}"
+  app_version = "${var.app_version}"
+  network_name = "${docker_network.private_network.name}"
+}
 
-  ports {
-    internal = "${var.app_port}"
-    external = "${var.app_port}"
-  }
-
-  networks_advanced {
-    name = "${docker_network.private_network.name}"
-    aliases = ["app"]
-  }
+module "nginx" {
+  source = "./modules/nginx"
+  volumes_path = "${var.volumes_path}"
+  nginx_host = "${var.nginx_host}"
+  nginx_port = "${var.nginx_port}"
+  network_name = "${docker_network.private_network.name}"
 }
