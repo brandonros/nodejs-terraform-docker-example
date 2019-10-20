@@ -174,7 +174,7 @@ resource "docker_container" "app" {
   ]
 }
 
-#nginx
+# nginx
 resource "docker_container" "nginx" {
   name  = "nginx"
   hostname = "${var.nginx_host}"

@@ -18,8 +18,10 @@ const initDb = async () => {
 }
 
 const initCache = async () => {
+  Promise.promisifyAll(redis.RedisClient.prototype)
+  Promise.promisifyAll(redis.Multi.prototype)
   const client = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST)
-  await new Promise(function (resolve, reject) {
+  await new Promise((resolve, reject) => {
     client.once('ready', resolve)
     client.once('error', reject)
   })
@@ -33,12 +35,30 @@ const initBrowser = async () => {
   return browser
 }
 
-const initApp = () => {
+const initApp = async (db, cache, browser) => {
   const app = express()
   app.get('/ping', (req, res) => {
-    res.send('pong')
+    Promise.all([
+      db.query('SELECT version()'),
+      cache.infoAsync(),
+      browser.version()
+    ])
+    .then(([dbVersion, cacheInfo, browserVersion]) => {
+      res.send({
+        dbVersion,
+        cacheInfo,
+        browserVersion
+      })
+    })
+    .catch(err => {
+      res.status(500).send({
+        error: err
+      })
+    })
   })
-  app.listen(process.env.PORT, () => console.log('Listening...'))
+  await new Promise((resolve, reject) => {
+    app.listen(process.env.PORT, () => resolve)
+  })
   return app
 }
 
@@ -50,7 +70,7 @@ const run = async () => {
     initCache(),
     initBrowser()
   ])
-  const app = initApp()
+  const app = await initApp(db, cache, browser)
 }
 
 process.on('unhandledRejection', (err) => {
