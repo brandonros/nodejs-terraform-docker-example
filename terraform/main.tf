@@ -21,56 +21,157 @@ variable "app_version" {}
 variable "nginx_host" {}
 variable "nginx_port" {}
 
+# network
 resource "docker_network" "private_network" {
   name = "my_network"
 }
 
-module "postgres" {
-  source = "./modules/postgres"
-  volumes_path = "${var.volumes_path}"
-  postgres_host = "${var.postgres_host}"
-  postgres_user = "${var.postgres_user}"
-  postgres_password = "${var.postgres_password}"
-  postgres_database = "${var.postgres_database}"
-  postgres_port = "${var.postgres_port}"
-  network_name = "${docker_network.private_network.name}"
+# postgres
+resource "docker_container" "db" {
+  name  = "db"
+  hostname = "${var.postgres_host}"
+  image = "postgres:alpine"
+  restart = "always"
+
+  env = [
+    "POSTGRES_USER=${var.postgres_user}",
+    "POSTGRES_PASSWORD=${var.postgres_password}",
+    "POSTGRES_DB=${var.postgres_database}"
+  ]
+
+  volumes {
+    host_path = abspath("${var.volumes_path}/postgres")
+    container_path = "/var/lib/postgresql/data"
+  }
+
+  ports {
+    internal = "${var.postgres_port}"
+    external = "${var.postgres_port}"
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["db"]
+  }
 }
 
-module "redis" {
-  source = "./modules/redis"
-  volumes_path = "${var.volumes_path}"
-  redis_host = "${var.redis_host}"
-  redis_port = "${var.redis_port}"
-  network_name = "${docker_network.private_network.name}"
+# redis
+resource "docker_container" "redis" {
+  name  = "redis"
+  hostname = "${var.redis_host}"
+  image = "redis:alpine"
+  command = ["redis-server", "--appendonly", "yes"]
+  restart = "always"
+
+  volumes {
+    host_path = abspath("${var.volumes_path}/redis")
+    container_path = "/data"
+  }
+
+  ports {
+    internal = "${var.redis_port}"
+    external = "${var.redis_port}"
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["redis"]
+  }
 }
 
-module "chrome" {
-  source = "./modules/chrome"
-  chrome_host = "${var.chrome_host}"
-  chrome_port = "${var.chrome_port}"
-  network_name = "${docker_network.private_network.name}"
+# chrome
+resource "docker_container" "chrome" {
+  name  = "chrome"
+  hostname = "chrome"
+  image = "browserless/chrome:latest"
+  restart = "always"
+
+  env = [
+    "HOST=${var.chrome_host}",
+    "PORT=${var.chrome_port}",
+  ]
+
+  ports {
+    internal = "${var.chrome_port}"
+    external = "${var.chrome_port}"
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["chrome"]
+  }
 }
 
-module "app" {
-  source = "./modules/app"
-  postgres_host = "${var.postgres_host}"
-  postgres_user = "${var.postgres_user}"
-  postgres_password = "${var.postgres_password}"
-  postgres_database = "${var.postgres_database}"
-  postgres_port = "${var.postgres_port}"
-  redis_host = "${var.redis_host}"
-  redis_port = "${var.redis_port}"
-  chrome_host = "${var.chrome_host}"
-  chrome_port = "${var.chrome_port}"
-  app_port = "${var.app_port}"
-  app_version = "${var.app_version}"
-  network_name = "${docker_network.private_network.name}"
+# app
+resource "docker_container" "app" {
+  count = 2
+
+  name  = "app-${count.index}"
+  hostname = "app-${count.index}"
+  image = "app:${var.app_version}"
+  restart = "always"
+
+  env = [
+    "POSTGRES_HOST=${var.postgres_host}",
+    "POSTGRES_PORT=${var.postgres_port}",
+    "POSTGRES_USER=${var.postgres_user}",
+    "POSTGRES_PASSWORD=${var.postgres_password}",
+    "POSTGRES_DB=${var.postgres_database}",
+    "REDIS_HOST=${var.redis_host}",
+    "REDIS_PORT=${var.redis_port}",
+    "PORT=${parseint("${var.app_port}", 10) + count.index}",
+    "BROWSER_ENDPOINT=ws://${var.chrome_host}:${var.chrome_port}",
+  ]
+
+  ports {
+    internal = parseint("${var.app_port}", 10) + count.index
+    external = parseint("${var.app_port}", 10) + count.index
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["app-${count.index}"]
+  }
+
+  depends_on = [
+    docker_container.db,
+    docker_container.redis,
+    docker_container.chrome
+  ]
 }
 
-module "nginx" {
-  source = "./modules/nginx"
-  volumes_path = "${var.volumes_path}"
-  nginx_host = "${var.nginx_host}"
-  nginx_port = "${var.nginx_port}"
-  network_name = "${docker_network.private_network.name}"
+#nginx
+resource "docker_container" "nginx" {
+  name  = "nginx"
+  hostname = "${var.nginx_host}"
+  image = "nginx:alpine"
+  restart = "always"
+
+  env = [
+    "NGINX_PORT=${var.nginx_port}",
+  ]
+
+  volumes {
+    host_path = abspath("../nginx/nginx.conf")
+    container_path = "/etc/nginx/nginx.conf"
+  }
+
+  volumes {
+    host_path = abspath("../nginx/html")
+    container_path = "/usr/share/nginx/html"
+  }
+
+  ports {
+    internal = "${var.nginx_port}"
+    external = "${var.nginx_port}"
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["nginx"]
+  }
+
+  depends_on = [
+    docker_container.app,
+  ]
 }
