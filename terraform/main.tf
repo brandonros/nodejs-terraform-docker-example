@@ -8,6 +8,9 @@ variable "postgres_user" {}
 variable "postgres_password" {}
 variable "postgres_database" {}
 variable "postgres_port" {}
+# pgbouncer
+variable "pgbouncer_host" {}
+variable "pgbouncer_port" {}
 # redis
 variable "redis_host" {}
 variable "redis_port" {}
@@ -53,6 +56,37 @@ resource "docker_container" "db" {
     name = "${docker_network.private_network.name}"
     aliases = ["db"]
   }
+}
+
+# pgbouncer
+resource "docker_container" "pgbouncer" {
+  name  = "pgbouncer"
+  hostname = "${var.pgbouncer_host}"
+  image = "edoburu/pgbouncer:latest"
+  restart = "always"
+
+  env = [
+    "LISTEN_ADDR=${var.pgbouncer_host}",
+    "LISTEN_PORT=${var.pgbouncer_port}",
+    "DB_USER=${var.postgres_user}",
+    "DB_PASSWORD=${var.postgres_password}",
+    "DB_HOST=${var.postgres_host}",
+    "DB_NAME=${var.postgres_database}"
+  ]
+
+  ports {
+    internal = "${var.pgbouncer_port}"
+    external = "${var.pgbouncer_port}"
+  }
+
+  networks_advanced {
+    name = "${docker_network.private_network.name}"
+    aliases = ["pgbouncer"]
+  }
+
+  depends_on = [
+    docker_container.db,
+  ]
 }
 
 # redis
@@ -112,8 +146,8 @@ resource "docker_container" "app" {
   restart = "always"
 
   env = [
-    "POSTGRES_HOST=${var.postgres_host}",
-    "POSTGRES_PORT=${var.postgres_port}",
+    "POSTGRES_HOST=${var.pgbouncer_host}",
+    "POSTGRES_PORT=${var.pgbouncer_port}",
     "POSTGRES_USER=${var.postgres_user}",
     "POSTGRES_PASSWORD=${var.postgres_password}",
     "POSTGRES_DB=${var.postgres_database}",
@@ -134,7 +168,7 @@ resource "docker_container" "app" {
   }
 
   depends_on = [
-    docker_container.db,
+    docker_container.pgbouncer,
     docker_container.redis,
     docker_container.chrome
   ]

@@ -1,4 +1,5 @@
-const pg = require('pg')
+const Promise = require('bluebird')
+const pgp = require('pg-promise')({ promiseLib: Promise })
 const redis = require('redis')
 const express = require('express')
 const puppeteer = require('puppeteer-core')
@@ -6,22 +7,21 @@ const puppeteer = require('puppeteer-core')
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 const initDb = async () => {
-  const client = new pg.Client({
+  const db = await pgp({
     host: process.env.POSTGRES_HOST,
     port: process.env.POSTGRES_PORT,
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB
   })
-  await client.connect()
-  return client
+  return db
 }
 
 const initCache = async () => {
   const client = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST)
   await new Promise(function (resolve, reject) {
-    client.on('ready', resolve)
-    client.on('error', reject)
+    client.once('ready', resolve)
+    client.once('error', reject)
   })
   return client
 }
