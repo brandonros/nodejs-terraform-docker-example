@@ -9,7 +9,7 @@ Example node.js app connected to Postgres + Redis with persistence + networking 
 
 ## Deploy
 
-`sh deploy.sh`
+`sh scripts/deploy.sh`
 
 1. Builds + tags node.js app Docker image
 1. Builds and applies Terraform plan
@@ -17,7 +17,7 @@ Example node.js app connected to Postgres + Redis with persistence + networking 
 
 ## Cleanup
 
-`sh cleanup.sh`
+`sh scripts/cleanup.sh`
 
 1. Destroys Terraform deployment
 1. Cleans up Docker volumes
