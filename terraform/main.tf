@@ -146,8 +146,8 @@ resource "docker_container" "app" {
   restart = "always"
 
   env = [
-    "POSTGRES_HOST=${var.pgbouncer_host}",
-    "POSTGRES_PORT=${var.pgbouncer_port}",
+    "PGBOUNCER_HOST=${var.pgbouncer_host}",
+    "PGBOUNCER_PORT=${var.pgbouncer_port}",
     "POSTGRES_USER=${var.postgres_user}",
     "POSTGRES_PASSWORD=${var.postgres_password}",
     "POSTGRES_DB=${var.postgres_database}",

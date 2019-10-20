@@ -8,8 +8,8 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 const initDb = async () => {
   const db = await pgp({
-    host: process.env.POSTGRES_HOST,
-    port: process.env.POSTGRES_PORT,
+    host: process.env.PGBOUNCER_HOST,
+    port: process.env.PGBOUNCER_PORT,
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB
