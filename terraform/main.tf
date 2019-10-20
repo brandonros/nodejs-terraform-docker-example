@@ -45,7 +45,7 @@ resource "docker_container" "db" {
   }
 
   ports {
-    internal = "${var.postgres_port}"
+    internal = "5432"
     external = "${var.postgres_port}"
   }
 
@@ -69,7 +69,7 @@ resource "docker_container" "redis" {
   }
 
   ports {
-    internal = "${var.redis_port}"
+    internal = "6379"
     external = "${var.redis_port}"
   }
 
