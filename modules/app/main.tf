@@ -25,7 +25,7 @@ resource "docker_container" "app" {
     "POSTGRES_DB=${var.postgres_database}",
     "REDIS_HOST=${var.redis_host}",
     "REDIS_PORT=${var.redis_port}",
-    "PORT=${var.app_port}",
+    "PORT=${parseint("${var.app_port}", 10) + count.index}",
     "BROWSER_ENDPOINT=ws://chrome:5000",
   ]
 
