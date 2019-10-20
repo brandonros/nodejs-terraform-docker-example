@@ -35,27 +35,26 @@ const initBrowser = async () => {
   return browser
 }
 
-const initApp = async (db, cache, browser) => {
-  const app = express()
-  app.get('/ping', (req, res) => {
-    Promise.all([
+const pingMiddleware = (db, cache, browser) => {
+  return async (req, res) => {
+    const [dbVersion, cacheInfo, browserVersion] = await Promise.all([
       db.query('SELECT version()'),
       cache.infoAsync(),
       browser.version()
     ])
-    .then(([dbVersion, cacheInfo, browserVersion]) => {
-      res.send({
-        dbVersion,
-        cacheInfo,
-        browserVersion
-      })
-    })
-    .catch(err => {
-      res.status(500).send({
-        error: err
-      })
-    })
-  })
+    return {
+      dbVersion,
+      cacheInfo,
+      browserVersion
+    }
+  }
+}
+
+const asyncMiddleware = (fn, req, resp) => Promise.resolve(fn(req, resp)).then(res => resp.send(res)).catch(err => res.status(500).send({ err }))
+
+const initApp = async (db, cache, browser) => {
+  const app = express()
+  app.get('/ping', (req, res) => asyncMiddleware(pingMiddleware(db, cache, browser), req, res))
   await new Promise((resolve, reject) => app.listen(process.env.PORT, process.env.HOST, () => resolve))
   return app
 }
@@ -69,6 +68,7 @@ const run = async () => {
     initBrowser()
   ])
   const app = await initApp(db, cache, browser)
+  console.log('Listening...')
 }
 
 process.on('unhandledRejection', (err) => {
