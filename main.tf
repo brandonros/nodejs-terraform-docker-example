@@ -52,8 +52,8 @@ module "chrome" {
   network_name = "${docker_network.private_network.name}"
 }
 
-module "app-001" {
-  source = "./modules/app-001"
+module "app" {
+  source = "./modules/app"
   postgres_host = "${var.postgres_host}"
   postgres_user = "${var.postgres_user}"
   postgres_password = "${var.postgres_password}"
@@ -62,20 +62,6 @@ module "app-001" {
   redis_host = "${var.redis_host}"
   redis_port = "${var.redis_port}"
   app_port = "${var.app_001_port}"
-  app_version = "${var.app_version}"
-  network_name = "${docker_network.private_network.name}"
-}
-
-module "app-002" {
-  source = "./modules/app-002"
-  postgres_host = "${var.postgres_host}"
-  postgres_user = "${var.postgres_user}"
-  postgres_password = "${var.postgres_password}"
-  postgres_database = "${var.postgres_database}"
-  postgres_port = "${var.postgres_port}"
-  redis_host = "${var.redis_host}"
-  redis_port = "${var.redis_port}"
-  app_port = "${var.app_002_port}"
   app_version = "${var.app_version}"
   network_name = "${docker_network.private_network.name}"
 }

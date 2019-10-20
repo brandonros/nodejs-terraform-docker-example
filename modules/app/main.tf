@@ -9,9 +9,11 @@ variable "app_port" {}
 variable "app_version" {}
 variable "network_name" {}
 
-resource "docker_container" "app-002" {
-  name  = "app-002"
-  hostname = "app-002"
+resource "docker_container" "app" {
+  count = 2
+
+  name  = "app-${count.index}"
+  hostname = "app-${count.index}"
   image = "app:${var.app_version}"
   restart = "always"
 
@@ -28,12 +30,12 @@ resource "docker_container" "app-002" {
   ]
 
   ports {
-    internal = "${var.app_port}"
-    external = "${var.app_port}"
+    internal = parseint("${var.app_port}", 10) + count.index
+    external = parseint("${var.app_port}", 10) + count.index
   }
 
   networks_advanced {
     name = "${var.network_name}"
-    aliases = ["app-002"]
+    aliases = ["app-${count.index}"]
   }
 }
