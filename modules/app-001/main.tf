@@ -24,6 +24,7 @@ resource "docker_container" "app-001" {
     "REDIS_HOST=${var.redis_host}",
     "REDIS_PORT=${var.redis_port}",
     "PORT=${var.app_port}",
+    "BROWSER_ENDPOINT=ws://chrome:5000",
   ]
 
   ports {

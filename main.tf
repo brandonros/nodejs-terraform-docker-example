@@ -11,6 +11,9 @@ variable "postgres_port" {}
 # redis
 variable "redis_host" {}
 variable "redis_port" {}
+# chrome
+variable "chrome_host" {}
+variable "chrome_port" {}
 # app
 variable "app_001_port" {}
 variable "app_002_port" {}
@@ -39,6 +42,13 @@ module "redis" {
   volumes_path = "${var.volumes_path}"
   redis_host = "${var.redis_host}"
   redis_port = "${var.redis_port}"
+  network_name = "${docker_network.private_network.name}"
+}
+
+module "chrome" {
+  source = "./modules/chrome"
+  chrome_host = "${var.chrome_host}"
+  chrome_port = "${var.chrome_port}"
   network_name = "${docker_network.private_network.name}"
 }
 

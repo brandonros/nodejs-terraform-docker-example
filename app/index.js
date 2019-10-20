@@ -1,6 +1,7 @@
 const { Client } = require('pg')
 const redis = require('redis')
 const express = require('express')
+const puppeteer = require('puppeteer-core')
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -25,6 +26,13 @@ const initCache = async () => {
   return redisClient
 }
 
+const initBrowser = async () => {
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: process.env.BROWSER_ENDPOINT
+  })
+  return browser
+}
+
 const initApp = () => {
   const app = express()
   app.get('/ping', (req, res) => {
@@ -37,11 +45,17 @@ const initApp = () => {
 const run = async () => {
   // wait for services to come up from docker network
   await delay(1000 * 30)
-  const [db, cache] = await Promise.all([
+  const [db, cache, browser] = await Promise.all([
     initDb(),
-    initCache()
+    initCache(),
+    initBrowser()
   ])
   const app = initApp()
 }
+
+process.on('unhandledRejection', (err) => {
+  console.error(err)
+  process.exit(1)
+})
 
 run()
