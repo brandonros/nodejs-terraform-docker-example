@@ -17,5 +17,4 @@ chrome_host = "chrome"
 chrome_port = "5000"
 # app
 app_version = "0.0.1"
-app_001_port = "3000"
-app_002_port = "3001"
+app_port = "3000"

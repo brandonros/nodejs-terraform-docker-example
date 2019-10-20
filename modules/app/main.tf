@@ -5,6 +5,8 @@ variable "postgres_host" {}
 variable "postgres_port" {}
 variable "redis_host" {}
 variable "redis_port" {}
+variable "chrome_host" {}
+variable "chrome_port" {}
 variable "app_port" {}
 variable "app_version" {}
 variable "network_name" {}
@@ -26,7 +28,7 @@ resource "docker_container" "app" {
     "REDIS_HOST=${var.redis_host}",
     "REDIS_PORT=${var.redis_port}",
     "PORT=${parseint("${var.app_port}", 10) + count.index}",
-    "BROWSER_ENDPOINT=ws://chrome:5000",
+    "BROWSER_ENDPOINT=ws://${var.chrome_host}:${var.chrome_port}",
   ]
 
   ports {

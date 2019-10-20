@@ -15,8 +15,7 @@ variable "redis_port" {}
 variable "chrome_host" {}
 variable "chrome_port" {}
 # app
-variable "app_001_port" {}
-variable "app_002_port" {}
+variable "app_port" {}
 variable "app_version" {}
 # nginx
 variable "nginx_host" {}
@@ -61,7 +60,9 @@ module "app" {
   postgres_port = "${var.postgres_port}"
   redis_host = "${var.redis_host}"
   redis_port = "${var.redis_port}"
-  app_port = "${var.app_001_port}"
+  chrome_host = "${var.chrome_host}"
+  chrome_port = "${var.chrome_port}"
+  app_port = "${var.app_port}"
   app_version = "${var.app_version}"
   network_name = "${docker_network.private_network.name}"
 }
