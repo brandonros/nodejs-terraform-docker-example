@@ -56,9 +56,7 @@ const initApp = async (db, cache, browser) => {
       })
     })
   })
-  await new Promise((resolve, reject) => {
-    app.listen(process.env.PORT, () => resolve)
-  })
+  await new Promise((resolve, reject) => app.listen(process.env.PORT, process.env.HOST, () => resolve))
   return app
 }
 

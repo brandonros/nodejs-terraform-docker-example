@@ -15,5 +15,8 @@
     "pg-promise": "^9.3.3",
     "puppeteer-core": "^1.20.0",
     "redis": "^2.8.0"
+  },
+  "resolutions": {
+    "https-proxy-agent": "^3.0.0"
   }
 }
